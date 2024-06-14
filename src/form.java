@@ -1,3 +1,4 @@
+import java.lang.reflect.Array;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -232,8 +233,10 @@ class Query {
     }
 
 
-    public void Delete(String column){
-        System.out.println("DELETE FROM" + column);
+    public Query Delete(String table_name){
+       this.sql_Query += "DELETE FROM "  + table_name;
+
+       return this;
     }
 
     public Query Select(String table , String[] columns){
@@ -288,6 +291,8 @@ class Person extends Query{
 }
 
 class Team extends Query{
+    String table_name = "teams";
+    String[] columns = {"name"};
 }
 
 class Contact extends Query{
@@ -296,6 +301,8 @@ class Contact extends Query{
 }
 
 class Experience extends Query{
+    String table_name = "skills";
+    String[] columns = {"skill"};
 }
 
 
@@ -305,9 +312,11 @@ public class form {
 
         // Person user = new Person();
         // String[] columns = {"name"};
-        // String[] inputs2 = {"aap2wqw"};
+        // String[] inputs2 = {"as12434"};
 
-    //    user.Update("students", columns , inputs2).Join("as", "12", "sa").Where("student_number","as@sa").Display();
+        // user.Delete("students").Where("student_number",inputs2[0]).Execute();
+
+      // user.Update("students", columns , inputs2).Join("as", "12", "sa").Where("student_number","as@sa").Display();
 //user.Where("utser","sasas").Where("hello","jokle").Where("taa","jokle").Display();
 
         // List<Map<String, Object>> list2 = new ArrayList<>();
@@ -513,14 +522,37 @@ public class form {
 
                 }
                 case 3 -> {
+                        String[] questions = {"Persoon","Contact", "Skills","Team"};
+                        String[] student_questions = {"Wat is de studenten nummer van de persoon die u wilt updaten?"};
+                        String[] student_id= Questionbuilder(student_questions);
+                        String[] inputs = SelectBuilder("Wat wilt u verwijderen", questions, true);
+
+                        Person deletetd_user = new Person();
+
+                        deletetd_user.Delete("students").where("student_number",student_id[0]).Execute();
+                        System.out.println(Arrays.toString(inputs));
+
+
                     System.out.println(3);
 
                 }
                 case 4 -> {
+                    String[] questions = {"Van wie wilt u de informatie weten?"};
+                    String[] input = Questionbuilder(questions);
+                    String[] columns = {"*"};
+                    Person get_user = new Person();
+
+                    get_user.Select("students", columns).Execute().Objectify();
                     System.out.println(4);
 
                 }
                 case 5 -> {
+                 
+                    String[] columns = {"*"};
+                    Person get_user = new Person();
+
+                    get_user.Select("students", columns).Execute().Objectify();
+                    System.out.println(4);
                     System.out.println(5);
 
                 }
