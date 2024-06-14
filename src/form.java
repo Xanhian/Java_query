@@ -529,7 +529,7 @@ public class form {
 
                         Person deletetd_user = new Person();
 
-                        deletetd_user.Delete("students").where("student_number",student_id[0]).Execute();
+                        deletetd_user.Delete("students").Where("student_number",student_id[0]).Execute();
                         System.out.println(Arrays.toString(inputs));
 
 
