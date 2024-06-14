@@ -1,0 +1,12 @@
+{
+    "configurations": [
+        
+        {
+            "type": "java",
+            "name": "form",
+            "request": "launch",
+            "mainClass": "form",
+            "projectName": "Froms_23e1280c"
+        }
+    ]
+}
