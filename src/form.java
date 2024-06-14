@@ -30,20 +30,6 @@ class Query {
 
 
 
-    // public List resultSetToArrayList(ResultSet rs) throws SQLException {
-    // ResultSetMetaData md = rs.getMetaData();
-    // int columns = md.getColumnCount();
-    // List<Map<String, Object>> list = new ArrayList<>();
-    // while (rs.next()) {
-    //     Map<String, Object> row = new HashMap<>(columns);
-    //     for (int i = 1; i <= columns; ++i) {
-    //         row.put(md.getColumnName(i), rs.getObject(i));
-    //     }
-    //     list.add(row);
-    // }
-
-    // return list;
-    // }
 
 
      /**
@@ -127,6 +113,19 @@ class Query {
 
          return this;
     }
+
+
+
+     /**
+     * This Where method is used to add conditions to the query, for complex data modification, 
+     * data retrieving - Written By Kyle Tasmoredjo.
+     * @param   column   the column that needs to search
+     * @param   search_value   the value that is needed to search
+     * @return  return partial statement
+     * 
+     */
+
+
     public Query Where(String column, String search_value){
         if (!this.sql_Query.contains("WHERE")) {
           this.sql_Query += " WHERE "+ column + " = ?";
@@ -140,6 +139,17 @@ class Query {
         return this;
     }
 
+
+     /**
+     * This orWhere method is used to add conditions to the query, for complex data modification, 
+     * data retrieving - Written By Kyle Tasmoredjo.
+     * @param   column   the column that needs to search
+     * @param   search_value   the value that is needed to search
+     * @return  return partial statement
+     * 
+     */
+
+
     public Query OrWhere(String column, String search_value ){
         
         this.sql_Query += " OR "+ column + " = ?";
@@ -148,6 +158,11 @@ class Query {
 
         return this;
     }
+
+     /**
+     * This method is used to execute the query, without adding this to your code. It won't execute. - writtne by Kyle Tasmoredjo
+     * 
+     */
 
     public Query Execute(){
         
@@ -211,27 +226,39 @@ class Query {
         return this;
     }
 
+      /**
+     * The join method is used to join tables togheter, this is used to vconnect two tables- Written By Kyle Tasmoredjo.
+     * @param   secondary_table   the column that needs to search
+     * @param   primary_key   the value that is needed to search
+     * @param   secondary_key   the value that is needed to search
+     * @return  return partial statement
+     * 
+     */
+
     public Query Join(String secondary_table, String primary_key, String secondary_key){
 
         String joinClause = " JOIN " + secondary_table + " ON " + this.main_table + "." + primary_key + "=" + secondary_table + "." + secondary_key;
 
         if (this.sql_Query.toLowerCase().contains("update")) {
-            // Find the index of " SET "
             int setIndex = this.sql_Query.toLowerCase().indexOf(" set ");
             if (setIndex != -1) {
                 StringBuilder queryBuilder = new StringBuilder(this.sql_Query);
-                // Insert the join clause before " SET "
                 queryBuilder.insert(setIndex, joinClause);
                 this.sql_Query = queryBuilder.toString();
             }
         } else {
-            // Append the join clause if "update" is not found
             this.sql_Query += joinClause;
         }
 
         return this;
     }
 
+     /**
+     * The delete method is used to remove a record from a table - Written By Kyle Tasmoredjo.
+     * @param   table_name   the table name to look which table record needs to be removed
+     * @return  return partial statement
+     * 
+     */
 
     public Query Delete(String table_name){
        this.sql_Query += "DELETE FROM "  + table_name;
@@ -239,6 +266,15 @@ class Query {
        return this;
     }
 
+
+
+     /**
+     * The select method is used to retrive data from the database- Written By Kyle Tasmoredjo.
+     * @param   table   the primary table from where it start retrieving data
+     * @param   columns   the columns that will be retrieved
+     * @return  return partial statement
+     * 
+     */
     public Query Select(String table , String[] columns){
         StringBuilder Column_builder = new StringBuilder();
         this.is_select = 1;
@@ -271,7 +307,13 @@ class Query {
 
     }
 
-     List<Map<String, Object>> Objectify(){
+
+     /**
+     * returns data as a object - Written By Kyle Tasmoredjo.
+     * @return  return object
+     * 
+     */
+    List<Map<String, Object>> Objectify(){
         // System.out.println(sql_Query);
         // System.out.println(this.main_table);
         // System.out.println(query_data);
@@ -618,6 +660,12 @@ public class form {
         return option;
     }
 
+     /**
+     * An method to display Questions, thats inputs into an array- Written By Kyle Tasmoredjo.
+     * @param   questions an array of Questions that will displayed
+     * @return  It rertun an array
+     */
+
     public static String[] Questionbuilder( String[] questions){
         Scanner input_val = new Scanner(System.in);
         List<String> list_values = new ArrayList<String>();
@@ -632,6 +680,13 @@ public class form {
         return input_values;
         
     }
+
+     /**
+     * An method to display A Select menu, thats set inputs into an array- Written By Kyle Tasmoredjo.
+     * @param   questions an array of Questions that will displayed
+     * @return  It rertun an array
+     */
+
 
     public static String[] SelectBuilder(String header, String[] select_fields, boolean  return_array ) {
     
