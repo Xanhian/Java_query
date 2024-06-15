@@ -79,10 +79,10 @@ class Query {
                     
                 }
             } catch (SQLException e) {
-          
+                    System.out.println(e);
                   return 0;
             }
-        return 0;
+        return 100000000;
     }
 
     
@@ -200,18 +200,24 @@ class Query {
                         for (String column : this.columns) {
                             Object value = rs.getObject(column);
                        
-                            System.out.print(column + ": " + value + " ");
+                            //  System.out.print(column + ": " + value + " ");
                         }
                         System.out.println();
                         Map<String, Object> row = new HashMap<>(columns);
+                        int xxx = 0;
                         for (int i = 1; i <= columns; ++i) {
-                            row.put(md.getColumnName(i), rs.getObject(i));
+                          //   System.out.println(md.getColumnName(i) + ": " + rs.getObject(i) + " ");
+                            row.put(this.columns.get(xxx), rs.getObject(i));
+                            xxx++;
+                           
                         }
-                        list.add(row);
+                         list.add(row);
+                      
                     }
 
                    
-                
+                        
+                //  System.out.println(Arrays.toString(list.toArray()));
                   
                      this.get_data = list;
                 }
@@ -240,7 +246,7 @@ class Query {
 
     public Query Join(String secondary_table, String primary_key, String secondary_key){
 
-        String joinClause = " JOIN " + secondary_table + " ON " + this.main_table + "." + primary_key + "=" + secondary_table + "." + secondary_key;
+        String joinClause = " LEFT JOIN " + secondary_table + " ON " + this.main_table + "." + primary_key + "=" + secondary_table + "." + secondary_key;
 
         if (this.sql_Query.toLowerCase().contains("update")) {
             int setIndex = this.sql_Query.toLowerCase().indexOf(" set ");
@@ -376,6 +382,7 @@ public class form {
                     String[] inputs = Questionbuilder(questions);
                     Person user = new Person();
                     int user_id =  user.Create(user.table_name, user.columns, inputs);
+                
                     String[] ja_or_nee = {"JA","NEE"};
                     String[] input_contact_ja_or_nee =  SelectBuilder("Heeft de persoon contact gegevens?", ja_or_nee, false);
                     String[] input_team_ja_or_nee =  SelectBuilder("Heeft de persoon een team?", ja_or_nee, false);
@@ -392,14 +399,13 @@ public class form {
       
 
                     if ("0".equals(input_team_ja_or_nee[0])) {
-                        Team user_team = new Team();
+                        Team find_team = new Team();
                         int id;
                         String[] teams_questions = {"Wat is de team naam?"};
                         String[] inputs_teams = Questionbuilder(teams_questions);           
-                        Team find_team = new Team();
                         List<Map<String, Object>> team_data = new ArrayList<>();
                         team_data = find_team.Select("teams", find_team.columns).Where("name", inputs_teams[0]).Execute().Objectify();
-                        System.out.println(Arrays.toString(team_data.toArray()));
+                        // System.out.println(Arrays.toString(team_data.toArray()));
                         if (team_data != null && !team_data.isEmpty()) {
                              id = (int) team_data.get(0).get("team_id");
                           
@@ -412,15 +418,24 @@ public class form {
 
                         String[] updated_value = {String.valueOf(id)};
                         String[] updated_columns = {"team_id"};
-                         user.Update("students", updated_columns , updated_value).Where("student_id", String.valueOf(user_id)).Execute().Display();
+                         user.Update("students", updated_columns , updated_value).Where("student_id", String.valueOf(user_id)).Execute();
                     }
+
+                    String[] skill_questions = {"Wat is de persoon skill?"};
+                    String[] skill_inputs = Questionbuilder(skill_questions);
+                    Experience skill = new Experience();
+                    int skill_id = skill.Create(skill.table_name, skill.columns, skill_inputs);
+                    String[] updated_value = {String.valueOf(skill_id)};
+
+                    String[] update_skill_column = {"skill_id"};
+                    user.Update("students", update_skill_column, updated_value).Where("student_id", String.valueOf(user_id)).Execute();
 
 
 
 
 
                     System.out.println("User Inserted");
-                  // System.err.println(user_id);
+                
 
                  
 
@@ -430,7 +445,7 @@ public class form {
                  
                 }
                 case 2 -> {
-                    enabled = false;
+                 
                     String[] tables = 
                     {
                         "Persoon", 
@@ -445,30 +460,37 @@ public class form {
                    
                     String[] table_to_update = SelectBuilder("Welk onderdeel wilt u updaten?", tables , false);
 
+                    if(table_to_update.length == 0){
+                        break;
+                    }
+
                     switch (table_to_update[0]) {
-                        case "0":
+                        case "0" -> {
                             List<String>columns_to_update = new ArrayList<>();
 
                             String table = "students";
                             String[] columns = {
-                            "Naam",
-                            "Familie naam",
-                            "Student nummer",
-                            "Leeftijd",
-                            "Geboortedatum",
+                                "Naam",
+                                "Familie naam",
+                                "Student nummer",
+                                "Leeftijd",
+                                "Geboortedatum",
                             };
 
                             String[] fields = {
-                            "name",
-                            "last_name",
-                            "student_number",
-                            "age",
-                            "birthyear",
+                                "name",
+                                "last_name",
+                                "student_number",
+                                "age",
+                                "birthyear",
                             };
 
                             List<String>generated_questions = new ArrayList<>();
                             String[] updated_columns = SelectBuilder("Welk gegevens wilt u updaten?", columns , true);
-                                for (String string : updated_columns) {
+                             if(updated_columns.length == 0){
+                                    break;
+                                }
+                            for (String string : updated_columns) {
                                 columns_to_update.add(fields[Integer.parseInt(string)]);
                                 generated_questions.add("Wat zal de nieuwe "+ columns[Integer.parseInt(string)] +" zijn? ");
                                 System.err.println(string);
@@ -484,29 +506,31 @@ public class form {
                             user.Update(table, update_columns, inputs).Where("student_number", student_id[0]).Execute();
 
                             System.out.println("Updated");
-                            break;
-                        case "1":
-
+                    }
+                        case "1" -> {
                             List<String>columns_to_update_x = new ArrayList<>();
 
                             String table_x = "contacts";
                             String[] columns_x = {
-                            "Email",
-                            "Address",
-                            "Telefoon nummer",
-
+                                "Email",
+                                "Address",
+                                "Telefoon nummer",
+                                
                             };
 
                             String[] fields_x = {
-                            "email",
-                            "address",
-                            "phone_number",
-                    
+                                "email",
+                                "address",
+                                "phone_number",
+                                
                             };
 
                             List<String>generated_questions_x = new ArrayList<>();
                             String[] updated_columns_x = SelectBuilder("Welk gegevens wilt u updaten?", columns_x , true);
-                                for (String string : updated_columns_x) {
+                              if(updated_columns_x.length == 0){
+                                    break;
+                                }
+                            for (String string : updated_columns_x) {
                                 columns_to_update_x.add(fields_x[Integer.parseInt(string)]);
                                 generated_questions_x.add("Wat zal de nieuwe "+ columns_x[Integer.parseInt(string)] +" zijn? ");
                                 System.err.println(string);
@@ -522,27 +546,29 @@ public class form {
                             user_x.Update(table_x, update_columns_x, inputs_x).Join("students", "contact_id", "contact_id").Where("student_number", student_id_x[0]).Execute();
 
                             System.out.println("Updated");
-                            break;
-                        case "2":
-                        
+                    }
+                        case "2" -> {
                             List<String>columns_to_update_y = new ArrayList<>();
 
                             String table_y = "skills";
                             String[] columns_y = {
-                            "Skill",
-                            
-
+                                "Skill",
+                                
+                                
                             };
 
                             String[] fields_y = {
-                            "skill",
-                        
-                    
+                                "skill",
+                                
+                                
                             };
 
                             List<String>generated_questions_y = new ArrayList<>();
                             String[] updated_columns_y = SelectBuilder("Welk gegevens wilt u updaten?", columns_y , true);
-                                for (String string : updated_columns_y) {
+                              if(updated_columns_y.length == 0){
+                                    break;
+                                }
+                            for (String string : updated_columns_y) {
                                 columns_to_update_y.add(fields_y[Integer.parseInt(string)]);
                                 generated_questions_y.add("Wat zal de nieuwe "+ columns_y[Integer.parseInt(string)] +" zijn? ");
                                 System.err.println(string);
@@ -556,29 +582,30 @@ public class form {
                             String[] inputs_y = Questionbuilder(update_questions_y);
 
                             user_y.Update(table_y, update_columns_y, inputs_y).Join("students", "skill_id", "contact_id").Where("student_number", student_id_y[0]).Execute();
-
-                            System.out.println("Updated");
                             
-                            break;
-                        case "3":
+                            System.out.println("Updated");
+                    }
+                        case "3" -> {
                             List<String>columns_to_update_z = new ArrayList<>();
 
                             String table_z = "teams";
                             String[] columns_z = {
-                            "Team naam",
-                            
-
+                                "Team naam",
+                                
+                                
                             };
 
                             String[] fields_z = {
-                            "teams.name",
-                        
-                    
+                                "teams.name",
+                                
+                                
                             };
 
                             List<String>generated_questions_z = new ArrayList<>();
                             String[] updated_columns_z = SelectBuilder("Welk gegevens wilt u updaten?", columns_z , true);
-                                
+                                  if(updated_columns_z.length == 0){
+                                    break;
+                                }
                             for (String string : updated_columns_z) {
                                 columns_to_update_z.add(fields_z[Integer.parseInt(string)]);
                                 generated_questions_z.add("Wat zal de nieuwe "+ columns_z[Integer.parseInt(string)] +" zijn? ");
@@ -595,7 +622,7 @@ public class form {
                             user_z.Update(table_z, update_columns_z, inputs_z).Join("students", "team_id", "team_id").Where("student_number", student_id_z[0]).Execute();
 
                             System.out.println("Updated");
-                            break;
+                    }
                     
                        
                     }
@@ -606,38 +633,34 @@ public class form {
                   
                         String[] questions = {"Teams","Contact", "Skills","Person"};
                         String[] tables = {"teams","contacts", "skills", "students"};
-                        String[] student_questions = {"Wat is de studenten nummer van de persoon die u wilt updaten?"};
+                        String[] student_questions = {"Wat is de studenten nummer van de persoon die u wilt verwijderen?"};
                         String[] student_id= Questionbuilder(student_questions);
                         String[] inputs = SelectBuilder("Wat wilt u verwijderen", questions, true);
                       
                       
                          for (String string : inputs) {
 
-                            switch (Integer.parseInt(string)) {
-                                case 0:
-                                Team delete_team = new Team();
-                                 delete_team.Delete(tables[0]).Join("students", "team_id", "team_id").Where("student_number",student_id[0]).Execute ();
-    
-                                    break;
-                                case 1:
-                                Contact delete_contact = new Contact();
-                                 delete_contact.Delete(tables[1]).Join("students", "contact_id", "contact_id").Where("student_number",student_id[0]).Execute();
-                                    
-                                    break;
-                                case 2:
-                                Experience delete_skill = new Experience();
-                                 delete_skill.Delete(tables[2]).Join("students", "skill_id", "skill_id").Where("student_number",student_id[0]).Execute();
-                                    
-                                    break;
-                                case 3:
-                                  Person deleted_user = new Person();
-                                  deleted_user.Delete(tables[3]).Where("student_number",student_id[0]).Execute();
-                                    
-                                    break;
-                            
-                               
-                            }
-      
+                                switch (Integer.parseInt(string)) {
+                                    case 0 -> {
+                                        Team delete_team = new Team();
+                                        delete_team.Delete(tables[0]).Join("students", "team_id", "team_id").Where("student_number",student_id[0]).Execute ();
+                                }
+                                    case 1 -> {
+                                        Contact delete_contact = new Contact();
+                                        delete_contact.Delete(tables[1]).Join("students", "contact_id", "contact_id").Where("student_number",student_id[0]).Execute();
+                                }
+                                    case 2 -> {
+                                        Experience delete_skill = new Experience();
+                                        delete_skill.Delete(tables[2]).Join("students", "skill_id", "skill_id").Where("student_number",student_id[0]).Execute();
+                                }
+                                    case 3 -> {
+                                        Person deleted_user = new Person();
+                                        deleted_user.Delete(tables[3]).Where("student_number",student_id[0]).Execute();
+                                }
+                                
+                                
+                                }
+        
                             }
 
                       
@@ -645,27 +668,65 @@ public class form {
                        
 
 
-                    System.out.println(3);
 
                 }
                 case 4 -> {
-                    String[] questions = {"Van wie wilt u de informatie weten?"};
-                    String[] input = Questionbuilder(questions);
-                    String[] columns = {"*"};
-                    Person get_user = new Person();
+                    enabled = false;
 
-                    get_user.Select("students", columns).Execute().Objectify();
-                    System.out.println(4);
+                    String[] questions = {"Van wie wilt u de informatie weten (student_number)?"};
+                    String[] input = Questionbuilder(questions);
+                    String[] columns = {"students.name","students.last_name","students.student_number","students.age","students.birthyear","contacts.email","contacts.address","contacts.phone_number","teams.name","skills.skill"};
+                    Person get_user = new Person();
+                   List<Map<String, Object>>  users_data =  get_user.Select("students", columns).Join("contacts", "contact_id", "contact_id").Join("teams", "team_id", "team_id").Join("skills", "skill_id", "skill_id").Where("students.student_number",input[0] ).Execute().Objectify();
+
+                // System.out.println(Arrays.toString(users_data.toArray()));
+
+                   if (!users_data.isEmpty()) {
+                    Map<String, Object> firstEntry = users_data.get(0);
+                    List<String> headers = new ArrayList<>(firstEntry.keySet());
+
+          
+                    System.out.println(createRow(headers));
+
+            
+                    System.out.println(createSeparator(headers.size()));
+
+             
+                    for (Map<String, Object> row : users_data) {
+                        List<Object> values = new ArrayList<>(row.values());
+                        System.out.println(createRow(values));
+                    }
+                } else {
+                    System.out.println("No data available.");
+                }
+              
 
                 }
                 case 5 -> {
-                 
-                    String[] columns = {"*"};
-                    Person get_user = new Person();
+                 enabled = false;
+                Person get_user = new Person();
+                List<Map<String, Object>> users_data = get_user.Select("students", get_user.columns).Execute().Objectify();
 
-                    get_user.Select("students", columns).Execute().Objectify();
-                    System.out.println(4);
-                    System.out.println(5);
+               
+                if (!users_data.isEmpty()) {
+                    Map<String, Object> firstEntry = users_data.get(0);
+                    List<String> headers = new ArrayList<>(firstEntry.keySet());
+
+          
+                    System.out.println(createRow(headers));
+
+            
+                    System.out.println(createSeparator(headers.size()));
+
+             
+                    for (Map<String, Object> row : users_data) {
+                        List<Object> values = new ArrayList<>(row.values());
+                        System.out.println(createRow(values));
+                    }
+                } else {
+                    System.out.println("No data available.");
+                }
+                 
 
                 }
                 case 6 -> {
@@ -677,24 +738,6 @@ public class form {
                
             }
         }
-
-        // Person test = new Person();
-        // String[] columns = {"name", "last_name"};
-        // String[] values = {"kyle","tasmoredjo"};
-        // int user_id =  test.Create("students", columns, values);
-        // System.out.println(user_id);
-       
-    //    while (enable_program) {
-    //     if(enable_program == false){
-    //          System.out.print("Oops! Something whent wrong :(");
-    //         break;
-    //     }
-        // Person test = new Person();
-        // String[] columns = {"name"};
-        // String[] values = {"jason"};
-        // test.Create("students", columns, values);
-        //  System.out.print("the Program start ");
-    //    }
       
 
         
@@ -737,6 +780,8 @@ public class form {
      */
 
     public static String[] Questionbuilder( String[] questions){
+        System.out.print("\033[H\033[2J");  
+        System.out.flush();  
         Scanner input_val = new Scanner(System.in);
         List<String> list_values = new ArrayList<String>();
         for (int idx = 0; idx < questions.length; idx++) {
@@ -806,6 +851,23 @@ public class form {
 
         String[] input_values = list_values.toArray(new String[0]);
         return input_values;
+    }
+
+
+      private static String createRow(List<?> columns) {
+        StringBuilder row = new StringBuilder();
+        for (Object column : columns) {
+            row.append(String.format("%-20s", column)).append(" | ");
+        }
+        return row.toString();
+    }
+
+    private static String createSeparator(int columnCount) {
+        StringBuilder separator = new StringBuilder();
+        for (int i = 0; i < columnCount; i++) {
+            separator.append("------------------------");
+        }
+        return separator.toString();
     }
 
   
