@@ -1,4 +1,4 @@
-import java.lang.reflect.Array;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -199,6 +199,7 @@ class Query {
                     while (rs.next()) {
                         for (String column : this.columns) {
                             Object value = rs.getObject(column);
+                       
                             System.out.print(column + ": " + value + " ");
                         }
                         System.out.println();
@@ -347,7 +348,7 @@ class Person extends Query{
 
 class Team extends Query{
     String table_name = "teams";
-    String[] columns = {"name"};
+    String[] columns = {"team_id","name"};
 }
 
 class Contact extends Query{
@@ -375,14 +376,56 @@ public class form {
                     String[] inputs = Questionbuilder(questions);
                     Person user = new Person();
                     int user_id =  user.Create(user.table_name, user.columns, inputs);
-                    System.err.println(user_id);
-                    Contact user_contact = new Contact();
-                    String[] contact_questions = {"Wat is je contact email?","Wat is je addres?","Wat is je telefoon nummer?"};
-                    String[] inputs_contact = Questionbuilder(contact_questions);
-                    int user_contact_id = user_contact.Create(user_contact.table_name, user_contact.columns, inputs_contact);
-                    String[] updated_value = {String.valueOf(user_contact_id)};
-                    String[] updated_columns = {"contact_id"};
-                    user.Update("students", updated_columns , updated_value).Where("student_id", String.valueOf(user_id)).Execute().Display();
+                    String[] ja_or_nee = {"JA","NEE"};
+                    String[] input_contact_ja_or_nee =  SelectBuilder("Heeft de persoon contact gegevens?", ja_or_nee, false);
+                    String[] input_team_ja_or_nee =  SelectBuilder("Heeft de persoon een team?", ja_or_nee, false);
+                    
+                    if ("0".equals(input_contact_ja_or_nee[0])) {
+                        Contact user_contact = new Contact();
+                        String[] contact_questions = {"Wat is je contact email?","Wat is je addres?","Wat is je telefoon nummer?"};
+                        String[] inputs_contact = Questionbuilder(contact_questions);
+                        int user_contact_id = user_contact.Create(user_contact.table_name, user_contact.columns, inputs_contact);
+                        String[] updated_value = {String.valueOf(user_contact_id)};
+                        String[] updated_columns = {"contact_id"};
+                       user.Update("students", updated_columns , updated_value).Where("student_id", String.valueOf(user_id)).Execute().Display();
+                    }
+      
+
+                    if ("0".equals(input_team_ja_or_nee[0])) {
+                        Team user_team = new Team();
+                        int id;
+                        String[] teams_questions = {"Wat is de team naam?"};
+                        String[] inputs_teams = Questionbuilder(teams_questions);           
+                        Team find_team = new Team();
+                        List<Map<String, Object>> team_data = new ArrayList<>();
+                        team_data = find_team.Select("teams", find_team.columns).Where("name", inputs_teams[0]).Execute().Objectify();
+                        System.out.println(Arrays.toString(team_data.toArray()));
+                        if (team_data != null && !team_data.isEmpty()) {
+                             id = (int) team_data.get(0).get("team_id");
+                          
+                        }else{
+                            String[] columns = {"name"};
+                             id = find_team.Create(find_team.table_name,columns, inputs_teams);
+
+                        }
+                        
+
+                        String[] updated_value = {String.valueOf(id)};
+                        String[] updated_columns = {"team_id"};
+                         user.Update("students", updated_columns , updated_value).Where("student_id", String.valueOf(user_id)).Execute().Display();
+                    }
+
+
+
+
+
+                    System.out.println("User Inserted");
+                  // System.err.println(user_id);
+
+                 
+
+
+
                         
                  
                 }
@@ -430,7 +473,7 @@ public class form {
                                 generated_questions.add("Wat zal de nieuwe "+ columns[Integer.parseInt(string)] +" zijn? ");
                                 System.err.println(string);
                             }
-                            String[] student_number_question = {"Wat is de stud2enten nummer van de persoon die u wilt updaten?"};
+                            String[] student_number_question = {"Wat is de studenten nummer van de persoon die u wilt updaten?"};
                             String[] student_id = Questionbuilder(student_number_question);
                         
                             Person user = new Person();
@@ -715,46 +758,6 @@ public class form {
      */
 
 
-    // public static String[] SelectBuilder(String header, String[] select_fields, boolean  return_array ) {
-    
-    //     Scanner input_val = new Scanner(System.in);
-    //     List<String> list_values = new ArrayList<>();
-    //     System.out.print("\033[H\033[2J");  
-    //     System.out.flush();  
-    //     while (true) {
-    //         System.out.println(header);
-    //         System.out.println("------------------------------------");
-    //         for (int idx = 0; idx < select_fields.length; idx++) {
-    //             System.out.println(idx + " - " + select_fields[idx]);
-    //         }
-    //         System.out.println("------------------------------------");
-    //         System.out.println("Please select an option, type 'stop' if you are done selecting:");
-            
-    //         String input = input_val.next();
-           
-    //         if ("stop".equals(input)) {
-    //             break;
-    //         } else {
-    //             try {
-    //                 int selectedIndex = Integer.parseInt(input);
-    //                 if (selectedIndex >= 0 && selectedIndex < select_fields.length) {
-    //                     list_values.add(String.valueOf(selectedIndex));
-    //                      if(return_array == false){
-    //                             break;
-    //                         }
-    //                 } else {
-    //                     System.out.println("Invalid selection, please try again.");
-    //                 }
-    //             } catch (NumberFormatException e) {
-    //                 System.out.println("Invalid input, please enter a number.");
-    //             }
-    //         }
-    //     }
-
-    //     String[] input_values = list_values.toArray(new String[0]);
-    //     return input_values;
-    // }
-
      public static String[] SelectBuilder(String header, String[] select_fields, boolean return_array) {
         Scanner input_val = new Scanner(System.in);
         List<String> list_values = new ArrayList<>();
@@ -762,8 +765,9 @@ public class form {
         
         System.out.print("\033[H\033[2J");  
         System.out.flush();  
-        
-        while (true) {
+        boolean select_loop = true;
+        while (select_loop) {
+     
             System.out.println(header);
             System.out.println("------------------------------------");
             for (int idx = 0; idx < select_fields.length; idx++) {
@@ -781,14 +785,14 @@ public class form {
             } else {
                 try {
                     int selectedIndex = Integer.parseInt(input);
-                    if (selectedIndex >= 0 && selectedIndex < select_fields.length) {
+                    if (selectedIndex >= 0 && list_values.size() < select_fields.length ) {
                         if (selectedIndices.contains(selectedIndex)) {
                             System.out.println("Item already selected, please choose a different one.");
                         } else {
                             selectedIndices.add(selectedIndex);
                             list_values.add(String.valueOf(selectedIndex));
                             if (!return_array) {
-                                break;
+                                select_loop = false;
                             }
                         }
                     } else {
